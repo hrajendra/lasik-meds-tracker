@@ -1,71 +1,47 @@
-# 👁 LASIK Meds Tracker
+# LASIK Meds Tracker
 
-Post-op medication tracker for **Himateja** (Femto LASIK · May 15, 2026 · Both eyes).  
-Built as a Progressive Web App — installable on iOS & Android, offline-capable, with dose alarms.
-
----
-
-## Medications tracked
-
-| # | Medication | Duration | Frequency |
-|---|-----------|----------|-----------|
-| 1 | Fluorometholone (FML) | 4 weeks, tapering | 4→3→2→1× daily |
-| 2 | Moxifloxacin | Week 1 only | 6× daily |
-| 3 | Ascon PF / PEG (lubricating) | 1 month | Every hour, 12×/day |
-| 4 | Omega-3 (Eye-360) | 1 month | 1× daily after meals |
-| 5 | Dolo 650 / Ultracet | As needed | Max 2× daily if pain |
-
----
+Post-op medication tracker for Himateja's LASIK surgery at Smart Vision Hospital (May 15, 2026).
 
 ## Features
 
-- **Today view** — shows only today's active doses, auto-computed from surgery date
-- **Take / Skip** per dose with undo support
-- **Dose alarms** — 5-min warning + on-time notification (requires permission)
-- **Snooze** — tap +5 min on any alarm
-- **Schedule view** — full tapering reference table
-- **History view** — day-by-day adherence log
-- **Offline** — works without internet after first load
-- **Installable** — add to home screen for background alarms
+- **Today view** — live dose tracking with taken/skipped per dose, next-dose highlight, progress bar, and op date + week number for easy reference
+- **Schedule view** — full tapering schedule for all medications
+- **History view** — 14-day adherence log with per-day breakdown
+- **Notifications** — browser push alerts for every scheduled dose, with "✓ Taken" / "✗ Skip" actions directly from the notification
+- **Offline** — works without internet once installed (service worker cache)
+- **PWA** — installable on iOS and Android home screens
 
----
+## Medications tracked
 
-## Setup: Enable GitHub Pages
+| Medication | Duration | Frequency |
+|---|---|---|
+| Fluorometholone (FML) | 4 weeks, tapering | 4→3→2→1×/day |
+| Moxifloxacin | Week 1 only | 6×/day |
+| Ascon PF / PEG | 1 month | Every hour (12×/day) |
+| Omega-3 (Eye-360) | 1 month | 1 tablet/day after meals |
+| Dolo 650 / Ultracet | As needed | Up to 2×/day if pain |
 
-1. Go to `https://github.com/hrajendra/lasik-meds-tracker`
-2. Click **Settings → Pages**
-3. Under **Source**, select `Deploy from a branch`
-4. Choose branch: `main`, folder: `/ (root)` → Save
-5. After ~60 seconds, the app is live at:  
-   **`https://hrajendra.github.io/lasik-meds-tracker/`**
+## Install on phone
 
----
+**Android (Chrome):**
+1. Open the URL in Chrome
+2. Tap ⋮ → "Add to Home Screen"
+3. Tap 🔔 in the app to enable dose reminders
 
-## Install on phones
+**iPhone (Safari):**
+1. Open the URL in Safari (must be Safari, not Chrome)
+2. Tap Share → "Add to Home Screen"
+3. Tap 🔔 to enable reminders
+4. Note: iOS requires the app to be open/backgrounded for notifications to fire
 
-### Android (Chrome)
-1. Open the URL above in Chrome
-2. Tap the **⋮ menu → Add to Home Screen**
-3. Grant notification permission when prompted
-4. Background alarms work automatically
+## Notification behavior
 
-### iOS (Safari) — requires iOS 16.4+
-1. Open the URL in **Safari** (not Chrome)
-2. Tap the **Share icon → Add to Home Screen**
-3. Open the installed app and grant notification permission
-4. Background alarms work when installed to home screen
+- **Android**: full background notifications once installed ✅
+- **iOS 16.4+**: works after "Add to Home Screen", keep app backgrounded
+- Tap "✓ Taken" or "✗ Skip" directly from the notification to log without opening the app
+- Notifications auto-reschedule when you open the app
 
----
+## GitHub Pages deployment
 
-## Local development
-
-No build step needed — plain HTML/JS/CSS.
-
-```bash
-python3 -m http.server 8080
-# Open http://localhost:8080
-```
-
----
-
-*Only use medications selected by your doctor — Smart Vision Eye Hospitals*
+Served from `main` branch root via GitHub Pages.
+URL: `https://hrajendra.github.io/lasik-meds-tracker/`
