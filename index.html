@@ -1,908 +1,825 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>LASIK Meds · Himateja</title>
-  <link rel="manifest" href="./manifest.json" />
-  <meta name="theme-color" content="#1565c0" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="LASIK Meds" />
-  <link rel="apple-touch-icon" href="./icon.svg" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1e40af">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LASIK Meds">
+  <title>LASIK Meds Tracker</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #f0f4f8;
-      --card: #ffffff;
-      --primary: #1565c0;
-      --primary-light: #e3f2fd;
-      --text: #1a202c;
-      --text-sub: #64748b;
-      --border: #e2e8f0;
-      --radius: 12px;
-      --shadow: 0 2px 8px rgba(0,0,0,0.08);
-      --taken: #16a34a;
-      --taken-bg: #f0fdf4;
-      --skip-col: #dc2626;
-      --nav-h: 64px;
-      --header-h: 60px;
+      --blue:    #1e40af;
+      --blue-lt: #dbeafe;
+      --bg:      #f1f5f9;
+      --card:    #ffffff;
+      --text:    #1e293b;
+      --muted:   #64748b;
+      --border:  #e2e8f0;
+      --nav-h:   62px;
+      --sit:     env(safe-area-inset-top, 0px);
+      --sib:     env(safe-area-inset-bottom, 0px);
     }
 
-    html { font-size: 16px; }
-
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100dvh;
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
+      max-width: 430px;
+      margin: 0 auto;
+      position: relative;
     }
 
-    #app { display: flex; flex-direction: column; min-height: 100dvh; }
-
-    /* === HEADER === */
-    header {
-      background: var(--primary);
-      color: white;
-      height: var(--header-h);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 16px;
-      position: sticky; top: 0; z-index: 100;
-      box-shadow: 0 2px 8px rgba(21,101,192,0.3);
+    /* ── Header ── */
+    .hdr {
+      background: var(--blue);
+      color: #fff;
+      padding: 14px 18px calc(14px + 0px);
+      padding-top: calc(14px + var(--sit));
     }
-    .header-title { font-size: 1rem; font-weight: 700; letter-spacing: -0.01em; }
-    .header-sub { font-size: 0.72rem; opacity: 0.75; margin-top: 1px; }
-
-    #notif-btn {
-      background: rgba(255,255,255,0.15);
-      border: none; color: white;
-      width: 38px; height: 38px;
-      border-radius: 50%;
-      cursor: pointer; font-size: 1.1rem;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.2s;
-      -webkit-tap-highlight-color: transparent;
+    .hdr-top { display: flex; justify-content: space-between; align-items: center; }
+    .hdr h1  { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+    .day-pill {
+      background: rgba(255,255,255,.2);
+      border-radius: 20px;
+      padding: 4px 11px;
+      font-size: 12px;
+      font-weight: 600;
     }
-    #notif-btn:hover { background: rgba(255,255,255,0.25); }
-    #notif-btn.on { background: rgba(255,255,255,0.3); }
+    .hdr-sub { font-size: 12px; opacity: .75; margin-top: 4px; }
 
-    /* === MAIN === */
-    main {
-      flex: 1;
+    /* ── Scroll area ── */
+    .main {
+      padding: 14px 14px calc(var(--nav-h) + var(--sib) + 14px);
       overflow-y: auto;
-      padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom));
     }
 
-    /* === BOTTOM NAV === */
-    nav {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      height: calc(var(--nav-h) + env(safe-area-inset-bottom));
+    /* ── Progress bar ── */
+    .progress-card {
       background: var(--card);
-      border-top: 1px solid var(--border);
-      display: flex; z-index: 100;
-      padding-bottom: env(safe-area-inset-bottom);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
     }
-    .tab-btn {
-      flex: 1;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 3px;
-      border: none; background: none;
-      cursor: pointer; color: var(--text-sub);
-      font-size: 0.68rem; font-weight: 600;
-      transition: color 0.2s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .tab-btn .ti { font-size: 1.3rem; }
-    .tab-btn.active { color: var(--primary); }
+    .prog-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; }
+    .prog-row strong { font-weight: 600; }
+    .prog-track { background: var(--border); border-radius: 6px; height: 7px; }
+    .prog-fill  { height: 7px; border-radius: 6px; background: #22c55e; transition: width .4s; }
 
-    /* === TODAY HEADER === */
-    .today-hdr {
-      background: var(--card);
-      padding: 14px 16px 12px;
-      border-bottom: 1px solid var(--border);
-      position: sticky; top: var(--header-h); z-index: 90;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-    }
-    .date-nav {
-      display: flex; align-items: center;
-      justify-content: space-between; margin-bottom: 10px;
-    }
-    .arrow-btn {
-      width: 36px; height: 36px;
-      border: 1px solid var(--border); background: var(--card);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; font-size: 1.2rem; color: var(--text-sub);
-      transition: all 0.15s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .arrow-btn:hover:not(:disabled) { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
-    .arrow-btn:disabled { opacity: 0.25; cursor: default; }
-
-    .date-ctr { text-align: center; }
-    .date-main {
-      font-size: 1rem; font-weight: 700; color: var(--text);
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-    }
-    .badge-today {
-      font-size: 0.62rem; background: var(--primary); color: white;
-      padding: 2px 7px; border-radius: 20px; font-weight: 700;
-    }
-    .date-sub { font-size: 0.73rem; color: var(--text-sub); margin-top: 3px; }
-    .week-pill {
-      display: inline-block;
-      background: var(--primary-light); color: var(--primary);
-      font-weight: 700; padding: 1px 9px; border-radius: 20px;
+    /* ── Section label ── */
+    .sec-lbl {
+      font-size: 11px; font-weight: 700;
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: .06em; margin: 14px 0 7px 2px;
     }
 
-    .prog-row { display: flex; align-items: center; gap: 10px; }
-    .prog-track {
-      flex: 1; height: 6px;
-      background: var(--border); border-radius: 3px; overflow: hidden;
-    }
-    .prog-fill {
-      height: 100%; background: var(--taken);
-      border-radius: 3px; transition: width 0.4s ease;
-    }
-    .prog-text { font-size: 0.72rem; color: var(--text-sub); white-space: nowrap; }
-
-    /* === DOSE LIST === */
-    .dose-list { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
-
+    /* ── Dose card ── */
     .dose-card {
       background: var(--card);
-      border-radius: var(--radius);
-      padding: 11px 12px 11px 14px;
-      border-left: 4px solid transparent;
-      box-shadow: var(--shadow);
-      display: flex; align-items: center; gap: 12px;
-      transition: opacity 0.2s, box-shadow 0.2s;
-    }
-    .dose-card.taken { background: var(--taken-bg); opacity: 0.7; }
-    .dose-card.skipped { opacity: 0.45; }
-    .dose-card.is-next { box-shadow: 0 4px 18px rgba(21,101,192,0.22); }
-
-    .dose-time-col { min-width: 46px; text-align: center; }
-    .dose-time { font-size: 0.88rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-    .tiny-badge {
-      font-size: 0.56rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.03em;
-      padding: 2px 5px; border-radius: 4px;
-      margin-top: 3px; display: inline-block;
-    }
-    .b-next  { background: #dbeafe; color: #1d4ed8; }
-    .b-late  { background: #fee2e2; color: #dc2626; }
-    .b-done  { background: #dcfce7; color: #16a34a; }
-
-    .dose-info { flex: 1; min-width: 0; }
-    .dose-name { font-size: 0.88rem; font-weight: 600; }
-    .dose-type { font-size: 0.7rem; font-weight: 500; margin-top: 1px; }
-
-    .dose-actions { display: flex; gap: 5px; flex-shrink: 0; }
-
-    .btn-take {
-      padding: 6px 12px; border-radius: 8px; border: none;
-      font-size: 0.78rem; font-weight: 700;
-      cursor: pointer; background: var(--primary); color: white;
-      transition: background 0.15s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .btn-take:hover { background: #1e40af; }
-
-    .btn-taken {
-      padding: 6px 12px; border-radius: 8px;
-      border: 2px solid var(--taken);
-      font-size: 0.78rem; font-weight: 700;
-      cursor: pointer; background: transparent; color: var(--taken);
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .btn-skip {
-      padding: 6px 9px; border-radius: 8px;
+      border-radius: 13px;
+      padding: 13px 14px;
+      margin-bottom: 9px;
       border: 1px solid var(--border);
-      font-size: 0.78rem; font-weight: 500;
-      cursor: pointer; background: transparent; color: var(--text-sub);
-      transition: all 0.15s;
-      -webkit-tap-highlight-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      border-left-width: 4px;
     }
-    .btn-skip:hover { border-color: var(--skip-col); color: var(--skip-col); }
+    .dose-card.is-next { box-shadow: 0 3px 12px rgba(30,64,175,.13); }
+    .dose-card.is-taken  { opacity: .55; }
+    .dose-card.is-skipped { opacity: .45; }
+    .dose-card.is-past:not(.is-taken):not(.is-skipped) { opacity: .6; }
 
-    .btn-skipped {
-      padding: 6px 9px; border-radius: 8px;
-      border: 2px solid var(--skip-col);
-      font-size: 0.78rem; font-weight: 700;
-      cursor: pointer; background: transparent; color: var(--skip-col);
-      -webkit-tap-highlight-color: transparent;
+    .d-time {
+      font-size: 14px; font-weight: 700;
+      min-width: 54px; line-height: 1.2;
     }
+    .d-time small { display: block; font-size: 10px; font-weight: 500; color: var(--muted); }
 
-    /* === DOLO === */
-    .section-lbl {
-      padding: 10px 16px 4px;
-      font-size: 0.68rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.08em;
-      color: var(--text-sub);
+    .d-info { flex: 1; min-width: 0; }
+    .d-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .d-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .d-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .btn-t, .btn-s {
+      padding: 6px 11px;
+      border-radius: 8px; border: none;
+      font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: transform .1s;
     }
-    .dolo-wrap { padding: 0 16px 8px; }
+    .btn-t:active, .btn-s:active { transform: scale(.93); }
+    .btn-t { background: #dcfce7; color: #15803d; }
+    .btn-s { background: #fee2e2; color: #b91c1c; }
+
+    .chip {
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; flex-shrink: 0;
+    }
+    .chip-t { background: #dcfce7; color: #15803d; }
+    .chip-s { background: #fee2e2; color: #b91c1c; }
+
+    /* ── Dolo as-needed ── */
     .dolo-card {
-      background: #fff8f0;
-      border: 1px solid #fed7aa;
-      border-left: 4px solid #f57c00;
-      border-radius: var(--radius);
-      padding: 12px 14px;
-      display: flex; align-items: center;
-      justify-content: space-between; gap: 10px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-left: 4px solid #f59e0b;
+      border-radius: 13px;
+      padding: 13px 14px;
+      margin-bottom: 9px;
     }
-    .dolo-name { font-size: 0.85rem; font-weight: 700; color: #92400e; }
-    .dolo-note { font-size: 0.7rem; color: #b45309; margin-top: 2px; }
+    .dolo-card h3 { font-size: 14px; font-weight: 700; color: #92400e; }
+    .dolo-card p  { font-size: 11px; color: #a16207; margin-top: 3px; }
+    .dolo-row {
+      display: flex; align-items: center;
+      gap: 10px; margin-top: 10px;
+    }
+    .dolo-count { font-size: 22px; font-weight: 800; color: #92400e; }
+    .dolo-unit  { font-size: 12px; color: #a16207; }
     .btn-dolo {
-      padding: 6px 12px; border-radius: 8px;
-      border: 1.5px solid #f57c00;
-      background: transparent; color: #f57c00;
-      font-size: 0.78rem; font-weight: 700;
-      cursor: pointer; white-space: nowrap;
-      -webkit-tap-highlight-color: transparent;
+      background: #f59e0b; color: #fff;
+      border: none; border-radius: 8px;
+      padding: 7px 14px; font-size: 13px; font-weight: 700;
+      cursor: pointer; margin-left: auto;
     }
-    .btn-dolo:disabled { opacity: 0.35; cursor: not-allowed; }
-
-    /* === BANNERS === */
-    .notif-banner {
-      margin: 12px 16px 0;
-      background: var(--primary-light); border: 1px solid #bfdbfe;
-      border-radius: var(--radius); padding: 10px 14px;
-      display: flex; align-items: center;
-      justify-content: space-between; gap: 10px;
-    }
-    .notif-banner p { font-size: 0.78rem; color: #1e40af; line-height: 1.4; }
-    .btn-enable {
-      padding: 6px 14px; border-radius: 8px;
-      background: var(--primary); color: white;
-      border: none; font-size: 0.78rem; font-weight: 700;
-      cursor: pointer; white-space: nowrap;
-      -webkit-tap-highlight-color: transparent;
+    .btn-dolo:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-undo {
+      background: none; border: none;
+      color: #a16207; font-size: 12px;
+      text-decoration: underline; cursor: pointer;
     }
 
-    .ios-banner {
-      margin: 8px 16px 0;
-      background: #fefce8; border: 1px solid #fde68a;
-      border-radius: var(--radius); padding: 9px 14px;
-      font-size: 0.73rem; color: #78350f; line-height: 1.5;
+    /* ── Notif permission ── */
+    .perm-card {
+      background: linear-gradient(135deg, #1e40af, #3b82f6);
+      color: #fff; border-radius: 14px;
+      padding: 15px 16px; margin-bottom: 12px;
+    }
+    .perm-card h3 { font-size: 15px; margin-bottom: 5px; }
+    .perm-card p  { font-size: 12px; opacity: .9; margin-bottom: 11px; }
+    .btn-perm {
+      background: #fff; color: #1e40af;
+      border: none; border-radius: 9px;
+      padding: 8px 18px; font-size: 13px; font-weight: 700;
+      cursor: pointer;
+    }
+    .warn-card {
+      background: #fff7ed; border: 1px solid #fed7aa;
+      border-radius: 12px; padding: 11px 14px;
+      font-size: 12px; color: #9a3412;
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .warn-card button {
+      margin-left: auto; background: none; border: none;
+      color: #9a3412; font-size: 18px; cursor: pointer; line-height: 1;
     }
 
-    /* === EMPTY === */
-    .empty {
-      text-align: center; padding: 56px 24px;
-      color: var(--text-sub); font-size: 0.9rem; line-height: 1.7;
+    /* ── Bottom nav ── */
+    .nav {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 430px;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      display: flex;
+      padding-bottom: var(--sib);
+      z-index: 200;
     }
-    .empty .ei { font-size: 2.8rem; margin-bottom: 12px; }
+    .nav-btn {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; padding: 9px 0;
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 10px; font-weight: 600; gap: 3px;
+      transition: color .15s;
+    }
+    .nav-btn.active { color: var(--blue); }
+    .nav-btn svg { width: 22px; height: 22px; }
 
-    /* === SCHEDULE === */
-    .sched-list { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    /* ── Views ── */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ── Schedule view ── */
     .sched-card {
-      background: var(--card); border-radius: var(--radius);
-      overflow: hidden; box-shadow: var(--shadow);
-      border-left: 4px solid transparent;
+      background: var(--card);
+      border-radius: 14px;
+      margin-bottom: 13px;
+      border: 1px solid var(--border);
+      overflow: hidden;
     }
     .sched-hdr {
-      padding: 10px 14px;
-      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 15px;
+      display: flex; align-items: center; gap: 10px;
     }
-    .sched-mname { font-size: 0.9rem; font-weight: 700; }
-    .sched-mtype { font-size: 0.7rem; font-weight: 600; opacity: 0.8; }
+    .sched-hdr .dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+    .sched-hdr h3 { font-size: 14px; font-weight: 700; flex: 1; }
+    .sched-hdr .badge {
+      font-size: 11px; padding: 3px 9px;
+      border-radius: 20px; font-weight: 600;
+    }
     .sched-row {
-      padding: 8px 14px; border-top: 1px solid rgba(0,0,0,0.05);
-      display: flex; align-items: baseline; gap: 10px;
+      padding: 10px 15px;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
     }
-    .sched-period {
-      font-size: 0.75rem; font-weight: 700; color: var(--text-sub);
-      min-width: 115px; flex-shrink: 0;
+    .sched-row-lbl { font-size: 12px; color: var(--muted); flex-shrink: 0; padding-top: 1px; }
+    .sched-row-times { font-size: 12px; font-weight: 600; text-align: right; line-height: 1.6; }
+    .sched-row.active-week { background: #f0f9ff; }
+
+    /* ── History view ── */
+    .hist-day {
+      background: var(--card);
+      border-radius: 14px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+      overflow: hidden;
     }
-    .sched-times { font-size: 0.8rem; color: var(--text); line-height: 1.5; }
-    .sched-stop { color: var(--taken); font-weight: 700; }
-
-    /* === HISTORY === */
-    .hist-list { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
-
-    .stat-card {
-      background: var(--card); border-radius: var(--radius);
-      padding: 14px 16px; box-shadow: var(--shadow);
+    .hist-hdr {
+      padding: 12px 15px;
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 4px;
+      cursor: pointer;
     }
-    .stat-lbl { font-size: 0.7rem; color: var(--text-sub); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-    .stat-val { font-size: 1.6rem; font-weight: 800; color: var(--taken); margin-top: 3px; }
-    .stat-detail { font-size: 0.82rem; color: var(--text-sub); text-align: right; line-height: 1.6; }
+    .hist-hdr h3 { font-size: 14px; font-weight: 600; }
+    .hist-meta { display: flex; align-items: center; gap: 8px; }
+    .hist-count { font-size: 12px; color: var(--muted); }
+    .adh-pill {
+      font-size: 11px; font-weight: 700;
+      padding: 3px 9px; border-radius: 20px;
+    }
+    .adh-hi  { background: #dcfce7; color: #15803d; }
+    .adh-mid { background: #fef3c7; color: #92400e; }
+    .adh-lo  { background: #fee2e2; color: #b91c1c; }
+    .adh-na  { background: var(--border); color: var(--muted); }
+    .hist-body { padding: 0 15px 12px; display: none; }
+    .hist-med-lbl { font-size: 11px; font-weight: 700; margin: 10px 0 4px; }
+    .hist-dose-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 5px 0; border-top: 1px solid var(--border);
+      font-size: 12px;
+    }
 
-    .hist-card {
-      background: var(--card); border-radius: var(--radius);
-      padding: 12px 14px; box-shadow: var(--shadow);
-      cursor: pointer; transition: box-shadow 0.2s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .hist-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
-    .hist-top {
-      display: flex; align-items: center;
-      justify-content: space-between; margin-bottom: 8px;
-    }
-    .hist-date { font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
-    .hist-pct { font-size: 0.9rem; font-weight: 800; color: var(--taken); }
-    .hist-bar-wrap {
-      height: 7px; background: var(--border);
-      border-radius: 4px; overflow: hidden;
-      display: flex; margin-bottom: 7px;
-    }
-    .hb-taken { background: var(--taken); }
-    .hb-skip  { background: var(--skip-col); opacity: 0.6; }
-    .hist-stats { display: flex; gap: 12px; flex-wrap: wrap; }
-    .hs { font-size: 0.7rem; color: var(--text-sub); }
-    .hs.t { color: var(--taken); font-weight: 700; }
-    .hs.s { color: var(--skip-col); }
-    .hs.ml { margin-left: auto; }
+    /* ── Empty state ── */
+    .empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+    .empty .ico { font-size: 44px; margin-bottom: 10px; }
+    .empty p { font-size: 14px; line-height: 1.5; }
 
-    @media (min-width: 640px) {
-      .dose-list, .sched-list, .hist-list { max-width: 620px; margin: 0 auto; }
-      .today-hdr { max-width: 620px; margin: 0 auto; position: static; }
+    /* ── Install hint ── */
+    .install-hint {
+      background: #f0fdf4; border: 1px solid #bbf7d0;
+      border-radius: 12px; padding: 11px 14px;
+      font-size: 12px; color: #15803d;
+      margin-bottom: 12px; line-height: 1.5;
     }
   </style>
 </head>
+
 <body>
-<div id="app">
-  <header>
-    <div>
-      <div class="header-title">👁 LASIK Meds</div>
-      <div class="header-sub">Himateja · Smart Vision Hospital</div>
+
+  <!-- HEADER -->
+  <header class="hdr">
+    <div class="hdr-top">
+      <h1>👁 LASIK Meds</h1>
+      <span class="day-pill" id="dayPill">Day 1</span>
     </div>
-    <button id="notif-btn" onclick="handleNotifBtn()" title="Notifications">🔕</button>
+    <div class="hdr-sub" id="hdrSub">Himateja · Loading…</div>
   </header>
-  <main id="main"></main>
-  <nav>
-    <button class="tab-btn active" data-tab="today" onclick="switchTab('today')">
-      <span class="ti">📋</span><span>Today</span>
+
+  <!-- MAIN SCROLL -->
+  <div class="main">
+
+    <!-- TODAY -->
+    <div class="view active" id="view-today">
+      <div id="notifArea"></div>
+      <div id="todayProgress"></div>
+      <div id="todayDoses"></div>
+      <div id="todayDolo"></div>
+    </div>
+
+    <!-- SCHEDULE -->
+    <div class="view" id="view-schedule">
+      <div id="scheduleContent"></div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="view" id="view-history">
+      <div id="historyContent"></div>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="nav">
+    <button class="nav-btn active" id="tab-today" onclick="switchTab('today')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <circle cx="12" cy="12" r="4"/>
+        <line x1="12" y1="2" x2="12" y2="5"/>
+        <line x1="12" y1="19" x2="12" y2="22"/>
+        <line x1="2" y1="12" x2="5" y2="12"/>
+        <line x1="19" y1="12" x2="22" y2="12"/>
+        <line x1="4.9" y1="4.9" x2="7.1" y2="7.1"/>
+        <line x1="16.9" y1="16.9" x2="19.1" y2="19.1"/>
+        <line x1="4.9" y1="19.1" x2="7.1" y2="16.9"/>
+        <line x1="16.9" y1="7.1" x2="19.1" y2="4.9"/>
+      </svg>
+      Today
     </button>
-    <button class="tab-btn" data-tab="schedule" onclick="switchTab('schedule')">
-      <span class="ti">📅</span><span>Schedule</span>
+    <button class="nav-btn" id="tab-schedule" onclick="switchTab('schedule')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8"  y1="2" x2="8"  y2="6"/>
+        <line x1="3"  y1="10" x2="21" y2="10"/>
+      </svg>
+      Schedule
     </button>
-    <button class="tab-btn" data-tab="history" onclick="switchTab('history')">
-      <span class="ti">📊</span><span>History</span>
+    <button class="nav-btn" id="tab-history" onclick="switchTab('history')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      History
     </button>
   </nav>
-</div>
 
 <script>
-// ===================== CONFIG =====================
-const SURGERY = '2026-05-15';
-const OP_DATE_LABEL = 'May 15, 2026';
+// ═══════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════
+const SURGERY_DATE = new Date('2026-05-15T00:00:00'); // IST midnight
+const PATIENT = 'Himateja';
 
-// ===================== MEDS =====================
 const MEDS = [
   {
-    id: 'fml', name: 'Fluorometholone', abbr: 'FML',
-    type: 'Eye Drop · Both Eyes',
-    color: '#c62828', bg: '#ffebee',
+    id: 'fml', name: 'Fluorometholone (FML)', short: 'FML',
+    type: 'drops', color: '#ef4444', bg: '#fef2f2',
     schedule: [
-      { kind: 'week', from: 1, to: 1, times: ['07:30','11:30','15:30','19:30'] },
-      { kind: 'week', from: 2, to: 2, times: ['07:30','13:30','15:30'] },
-      { kind: 'week', from: 3, to: 3, times: ['07:30','19:30'] },
-      { kind: 'week', from: 4, to: 4, times: ['07:30'] },
+      { ds: 1, de: 7,  times: ['07:30','11:30','15:30','19:30'] },
+      { ds: 8, de: 14, times: ['07:30','13:30','15:30'] },
+      { ds:15, de: 21, times: ['07:30','19:30'] },
+      { ds:22, de: 28, times: ['07:30'] },
     ]
   },
   {
-    id: 'moxi', name: 'Moxifloxacin', abbr: 'Moxi',
-    type: 'Eye Drop · Both Eyes',
-    color: '#6a1b9a', bg: '#f3e5f5',
+    id: 'moxi', name: 'Moxifloxacin', short: 'Moxi',
+    type: 'drops', color: '#8b5cf6', bg: '#f5f3ff',
     schedule: [
-      { kind: 'week', from: 1, to: 1, times: ['07:00','10:00','13:00','16:00','19:00','22:00'] },
+      { ds: 1, de: 7, times: ['07:00','10:00','13:00','16:00','19:00','22:00'] },
     ]
   },
   {
-    id: 'ascon', name: 'Aquim PF', abbr: 'Aquim PF',
-    type: 'Lubricant Drop · Both Eyes',
-    color: '#0277bd', bg: '#e1f5fe',
+    id: 'ascon', name: 'Aquim PF', short: 'Aquim PF',
+    type: 'drops', color: '#3b82f6', bg: '#eff6ff',
     schedule: [
-      { kind: 'day', from: 1, to: 30, times: ['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'] },
+      { ds: 0, de: 30, times: ['07:00','08:00','09:00','10:00','11:00','12:00',
+                                '13:00','14:00','15:00','16:00','17:00','18:00'] },
     ]
   },
   {
-    id: 'omega', name: 'Omega-3 (Eye-360)', abbr: 'Omega-3',
-    type: 'Tablet · After meals',
-    color: '#2e7d32', bg: '#e8f5e9',
+    id: 'omega3', name: 'Omega-3 (Eye-360)', short: 'Omega-3',
+    type: 'tablet', color: '#22c55e', bg: '#f0fdf4',
     schedule: [
-      { kind: 'day', from: 1, to: 30, times: ['14:00'] },
+      { ds: 0, de: 30, times: ['14:00'] },
     ]
-  },
+  }
 ];
 
-// ===================== STATE =====================
-let tab = 'today';
-let curDate = todayStr();
-let doseLog = {}, doloLog = {};
-let swReady = false;
-
-// ===================== UTILS =====================
-function todayStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
-}
-function p2(n) { return String(n).padStart(2,'0'); }
-
-function parseD(str) {
-  const [y,m,d] = str.split('-').map(Number);
-  return new Date(y, m-1, d);
-}
-function strD(d) {
-  return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
-}
-function daysSince(dateStr) {
-  return Math.round((parseD(dateStr) - parseD(SURGERY)) / 86400000);
-}
-function weekNum(days) {
-  if (days <= 0) return 0;
-  return Math.ceil(days / 7);
-}
-function fmtDate(str) {
-  return parseD(str).toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' });
+// ═══════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════
+function dayOffset(date) {
+  const a = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const b = new Date(SURGERY_DATE.getFullYear(), SURGERY_DATE.getMonth(), SURGERY_DATE.getDate());
+  return Math.round((a - b) / 86400000);
 }
 
-// ===================== DOSE LOGIC =====================
-function dosesFor(dateStr) {
-  const days = daysSince(dateStr);
-  const wk = weekNum(days);
-  if (days < 1) return [];
+function dateStr(date) {
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`;
+}
+
+function pad(n) { return String(n).padStart(2,'0'); }
+
+function fmt12(t24) {
+  const [h, m] = t24.split(':').map(Number);
+  return `${h%12||12}:${pad(m)} ${h>=12?'PM':'AM'}`;
+}
+
+function nowStr() {
+  const n = new Date();
+  return `${pad(n.getHours())}:${pad(n.getMinutes())}`;
+}
+
+function fmtDate(d) {
+  return d.toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'long'});
+}
+
+function getDoses(date) {
+  const off = dayOffset(date);
   const out = [];
-  for (const med of MEDS) {
-    for (const s of med.schedule) {
-      const active = s.kind === 'week'
-        ? (wk >= s.from && wk <= s.to)
-        : (days >= s.from && days <= s.to);
-      if (active) {
-        for (const t of s.times) {
-          const [h, m] = t.split(':').map(Number);
-          const dt = parseD(dateStr); dt.setHours(h, m, 0, 0);
-          out.push({
-            id: `${med.id}__${dateStr}__${t}`,
-            medId: med.id, medName: med.name,
-            type: med.type, color: med.color,
-            time: t, ts: dt.getTime(),
-          });
-        }
-        break;
+  MEDS.forEach(med => {
+    med.schedule.forEach(slot => {
+      if (off >= slot.ds && off <= slot.de) {
+        slot.times.forEach(t => out.push({ id:`${med.id}_${t}`, medId:med.id, med, time:t }));
       }
-    }
-  }
+    });
+  });
   return out.sort((a,b) => a.time.localeCompare(b.time));
 }
 
-function getStatus(id) { return doseLog[id]?.status || null; }
+function getStatus(ds, medId, time) { return localStorage.getItem(`s_${ds}_${medId}_${time}`); }
+function setStatus(ds, medId, time, v) { localStorage.setItem(`s_${ds}_${medId}_${time}`, v); }
+function getDoloCount(ds) { return parseInt(localStorage.getItem(`dolo_${ds}`)||'0'); }
+function setDoloCount(ds, n) { localStorage.setItem(`dolo_${ds}`, n); }
 
-function setStatus(id, status) {
-  if (status === null) delete doseLog[id];
-  else doseLog[id] = { status, at: Date.now() };
-  persist();
-}
+// ═══════════════════════════════════════════════════════════
+// TODAY VIEW
+// ═══════════════════════════════════════════════════════════
+const viewDate = new Date();
 
-function doloToday() { return doloLog[curDate] || []; }
-
-function logDolo() {
-  if (!doloLog[curDate]) doloLog[curDate] = [];
-  if (doloLog[curDate].length >= 2) return;
-  doloLog[curDate].push(Date.now());
-  persist(); render();
-}
-
-// ===================== STORAGE =====================
-function persist() {
-  try {
-    localStorage.setItem('lm_doses', JSON.stringify(doseLog));
-    localStorage.setItem('lm_dolo',  JSON.stringify(doloLog));
-  } catch(e) {}
-}
-function hydrate() {
-  try {
-    doseLog = JSON.parse(localStorage.getItem('lm_doses') || '{}');
-    doloLog = JSON.parse(localStorage.getItem('lm_dolo')  || '{}');
-  } catch(e) { doseLog = {}; doloLog = {}; }
-}
-
-// ===================== RENDER =====================
-function render() {
-  const main = document.getElementById('main');
-  if (tab === 'today')    main.innerHTML = renderToday();
-  else if (tab === 'schedule') main.innerHTML = renderSchedule();
-  else                    main.innerHTML = renderHistory();
-
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-
-  const nb = document.getElementById('notif-btn');
-  const granted = typeof Notification !== 'undefined' && Notification.permission === 'granted';
-  nb.textContent = granted ? '🔔' : '🔕';
-  nb.classList.toggle('on', granted);
-}
-
-// --- TODAY ---
 function renderToday() {
-  const days = daysSince(curDate);
-  const wk   = weekNum(days);
-  const doses = dosesFor(curDate);
-  const isToday = curDate === todayStr();
-  const now   = new Date();
-  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const ds   = dateStr(viewDate);
+  const off  = dayOffset(viewDate);
+  const now  = nowStr();
+  const doses = getDoses(viewDate);
 
-  const taken   = doses.filter(d => getStatus(d.id) === 'taken').length;
-  const skipped = doses.filter(d => getStatus(d.id) === 'skipped').length;
-  const pct     = doses.length ? Math.round(taken / doses.length * 100) : 0;
+  // Header
+  document.getElementById('dayPill').textContent = `Day ${off}`;
+  document.getElementById('hdrSub').textContent  = `${PATIENT} · ${fmtDate(viewDate)}`;
 
-  let wkLabel = '';
-  if (days === 0) wkLabel = 'Surgery Day';
-  else if (days < 0) wkLabel = 'Pre-surgery';
-  else if (wk >= 1 && wk <= 4) wkLabel = `Week ${wk} of 4`;
-  else if (days > 0 && days <= 30) wkLabel = 'Month 1';
-  else wkLabel = 'Treatment complete ✓';
+  // Progress
+  const taken = doses.filter(d => getStatus(ds,d.medId,d.time)==='taken').length;
+  const total = doses.length;
+  const pct   = total ? Math.round(taken/total*100) : 0;
+  document.getElementById('todayProgress').innerHTML = `
+    <div class="progress-card">
+      <div class="prog-row"><span>Today's progress</span><strong>${taken} / ${total} taken</strong></div>
+      <div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>
+    </div>`;
 
-  const minDate = new Date(parseD(SURGERY).getTime() + 86400000);
-  const prevOk  = parseD(curDate) > minDate;
-  const nextOk  = !isToday;
+  // Notification area
+  renderNotifArea();
 
-  let html = `
-    <div class="today-hdr">
-      <div class="date-nav">
-        <button class="arrow-btn" onclick="chgDate(-1)" ${!prevOk ? 'disabled' : ''}>‹</button>
-        <div class="date-ctr">
-          <div class="date-main">
-            ${fmtDate(curDate)}
-            ${isToday ? '<span class="badge-today">Today</span>' : ''}
-          </div>
-          <div class="date-sub">
-            Op: ${OP_DATE_LABEL} &nbsp;·&nbsp;
-            <span class="week-pill">${wkLabel}</span>
-          </div>
-        </div>
-        <button class="arrow-btn" onclick="chgDate(1)" ${!nextOk ? 'disabled' : ''}>›</button>
-      </div>
-  `;
+  // Dose list
+  const past     = doses.filter(d => d.time < now);
+  const upcoming = doses.filter(d => d.time >= now);
+  const pendingUp = upcoming.filter(d => !getStatus(ds,d.medId,d.time));
+  const nextTime  = pendingUp.length ? pendingUp[0].time : null;
 
-  if (doses.length > 0) {
-    html += `
-      <div class="prog-row">
-        <div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>
-        <div class="prog-text">${taken}/${doses.length} &nbsp;·&nbsp; ${pct}%</div>
-      </div>`;
+  let html = '';
+
+  if (past.length) {
+    html += `<div class="sec-lbl">Earlier today</div>`;
+    past.forEach(d => { html += doseCard(d, ds, 'past', false); });
   }
-
-  html += `</div>`;
-
-  // Notification nudge
-  if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-    html += `
-      <div class="notif-banner">
-        <p>Enable notifications to get reminders for each dose.</p>
-        <button class="btn-enable" onclick="handleNotifBtn()">Enable</button>
-      </div>`;
-  }
-
-  // iOS install hint
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !navigator.standalone;
-  if (isIOS) {
-    html += `<div class="ios-banner">📲 Install: tap Share → "Add to Home Screen" for background notifications.</div>`;
-  }
-
-  if (days < 1) {
-    return html + `<div class="empty"><div class="ei">🏥</div>Surgery day drops are managed by the clinic.<br>Tracking starts May 16.</div>`;
-  }
-  if (doses.length === 0) {
-    return html + `<div class="empty"><div class="ei">✅</div>No medications today.</div>`;
-  }
-
-  // Next upcoming dose
-  let nextId = null;
-  if (isToday) {
-    const nd = doses.find(d => {
-      const [h,m] = d.time.split(':').map(Number);
-      return (h*60+m) > nowMin && !getStatus(d.id);
+  if (upcoming.length) {
+    html += `<div class="sec-lbl">Upcoming</div>`;
+    upcoming.forEach(d => {
+      const isNext = d.time === nextTime && !getStatus(ds,d.medId,d.time);
+      html += doseCard(d, ds, 'upcoming', isNext);
     });
-    nextId = nd?.id;
+  }
+  if (!doses.length) {
+    html = `<div class="empty"><div class="ico">🎉</div><p>No scheduled doses today.<br>Recovery period complete!</p></div>`;
   }
 
-  html += `<div class="dose-list">`;
-  for (const dose of doses) {
-    const st = getStatus(dose.id);
-    const [h, m] = dose.time.split(':').map(Number);
-    const isPast = isToday && (h*60+m) < nowMin;
-    const isNext = dose.id === nextId;
-
-    let cls = 'dose-card';
-    if (st === 'taken') cls += ' taken';
-    if (st === 'skipped') cls += ' skipped';
-    if (isNext) cls += ' is-next';
-
-    let badge = '';
-    if (isNext) badge = `<span class="tiny-badge b-next">Next</span>`;
-    else if (isPast && !st) badge = `<span class="tiny-badge b-late">Late</span>`;
-    else if (st === 'taken') badge = `<span class="tiny-badge b-done">Done</span>`;
-
-    let acts = '';
-    if (st === 'taken') {
-      acts = `<button class="btn-taken" onclick="mark('${dose.id}',null)">✓ Taken</button>`;
-    } else if (st === 'skipped') {
-      acts = `
-        <button class="btn-skipped" onclick="mark('${dose.id}',null)">Skipped</button>
-        <button class="btn-take"    onclick="mark('${dose.id}','taken')">Take</button>`;
-    } else {
-      acts = `
-        <button class="btn-take" onclick="mark('${dose.id}','taken')">Take</button>
-        <button class="btn-skip" onclick="mark('${dose.id}','skipped')">Skip</button>`;
-    }
-
-    html += `
-      <div class="${cls}" style="border-left-color:${dose.color}">
-        <div class="dose-time-col">
-          <div class="dose-time">${dose.time}</div>
-          ${badge}
-        </div>
-        <div class="dose-info">
-          <div class="dose-name">${dose.medName}</div>
-          <div class="dose-type" style="color:${dose.color}">${dose.type}</div>
-        </div>
-        <div class="dose-actions">${acts}</div>
-      </div>`;
-  }
-  html += `</div>`;
-
-  // Dolo
-  if (days >= 1 && days <= 30) {
-    const dl = doloToday();
-    html += `
-      <div class="section-lbl">As Needed</div>
-      <div class="dolo-wrap">
-        <div class="dolo-card">
-          <div>
-            <div class="dolo-name">Dolo 650 / Ultracet</div>
-            <div class="dolo-note">Only if pain · max 2×/day · ${dl.length}/2 today</div>
-          </div>
-          <button class="btn-dolo" onclick="logDolo()" ${dl.length >= 2 ? 'disabled' : ''}>
-            + Record
-          </button>
-        </div>
-      </div>`;
-  }
-
-  return html;
+  document.getElementById('todayDoses').innerHTML = html;
+  renderDolo(ds);
 }
 
-// --- SCHEDULE ---
-function renderSchedule() {
-  const rows = [
-    {
-      med: MEDS[0],
-      rows: [
-        { p: 'Week 1 · May 16–22',    t: '7:30 AM · 11:30 AM · 3:30 PM · 7:30 PM' },
-        { p: 'Week 2 · May 23–29',    t: '7:30 AM · 1:30 PM · 3:30 PM' },
-        { p: 'Week 3 · May 30–Jun 5', t: '7:30 AM · 7:30 PM' },
-        { p: 'Week 4 · Jun 6–12',     t: '7:30 AM only' },
-      ]
-    },
-    {
-      med: MEDS[1],
-      rows: [
-        { p: 'Week 1 · May 16–22', t: '7:00 · 10:00 · 1:00 · 4:00 · 7:00 · 10:00 PM' },
-        { p: 'After Week 1',       t: 'STOP', stop: true },
-      ]
-    },
-    {
-      med: MEDS[2],
-      rows: [
-        { p: '1 Month · May 16–Jun 14', t: 'Every hour · 7 AM–6 PM · 12 doses/day' },
-      ]
-    },
-    {
-      med: MEDS[3],
-      rows: [
-        { p: '1 Month · May 16–Jun 14', t: '1 tablet daily after lunch (2:00 PM)' },
-      ]
-    },
-  ];
+function doseCard(dose, ds, period, isNext) {
+  const status = getStatus(ds, dose.medId, dose.time);
+  const med    = dose.med;
+  const isPast = period === 'past';
 
-  let html = `<div class="sched-list">`;
-  for (const item of rows) {
-    const { med } = item;
-    html += `
-      <div class="sched-card" style="border-left-color:${med.color}">
-        <div class="sched-hdr" style="background:${med.bg}">
-          <span class="sched-mname" style="color:${med.color}">${med.name}</span>
-          <span class="sched-mtype" style="color:${med.color}">${med.type}</span>
+  let cls = 'dose-card';
+  if (status === 'taken')  cls += ' is-taken';
+  if (status === 'skipped') cls += ' is-skipped';
+  if (isPast && !status)   cls += ' is-past';
+  if (isNext && !status)   cls += ' is-next';
+
+  const typeLabel = med.type==='drops' ? '💧 Eye drops · both eyes' : '💊 Tablet · after meals';
+
+  let actions;
+  if (status) {
+    const chip = status==='taken'
+      ? `<span class="chip chip-t">✓ Taken</span>`
+      : `<span class="chip chip-s">✗ Skipped</span>`;
+    // allow undo
+    actions = `<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+      ${chip}
+      <button onclick="undoDose('${ds}','${dose.medId}','${dose.time}')"
+        style="background:none;border:none;font-size:10px;color:var(--muted);text-decoration:underline;cursor:pointer">undo</button>
+    </div>`;
+  } else {
+    actions = `<div class="d-actions">
+      <button class="btn-t" onclick="markDose('${ds}','${dose.medId}','${dose.time}','taken')">✓</button>
+      <button class="btn-s" onclick="markDose('${ds}','${dose.medId}','${dose.time}','skipped')">✗</button>
+    </div>`;
+  }
+
+  return `<div class="${cls}" style="border-left-color:${med.color}">
+    <div class="d-time">${fmt12(dose.time)}</div>
+    <div class="d-info">
+      <div class="d-name">${med.short}</div>
+      <div class="d-sub">${typeLabel}</div>
+    </div>
+    ${actions}
+  </div>`;
+}
+
+function markDose(ds, medId, time, status) {
+  setStatus(ds, medId, time, status);
+  renderToday();
+  scheduleNotifications();
+}
+
+function undoDose(ds, medId, time) {
+  localStorage.removeItem(`s_${ds}_${medId}_${time}`);
+  renderToday();
+  scheduleNotifications();
+}
+
+function renderDolo(ds) {
+  const count = getDoloCount(ds);
+  const maxed = count >= 2;
+  document.getElementById('todayDolo').innerHTML = `
+    <div class="sec-lbl">As needed</div>
+    <div class="dolo-card">
+      <h3>💊 Dolo 650 / Ultracet</h3>
+      <p>Pain relief only · max 2× per day</p>
+      <div class="dolo-row">
+        <span class="dolo-count">${count}</span>
+        <span class="dolo-unit">taken today</span>
+        <button class="btn-dolo" onclick="logDolo('${ds}')" ${maxed?'disabled':''}>
+          ${maxed ? 'Max reached' : '+ Log dose'}
+        </button>
+        ${count > 0 ? `<button class="btn-undo" onclick="undoDolo('${ds}')">undo</button>` : ''}
+      </div>
+    </div>`;
+}
+
+function logDolo(ds) {
+  const c = getDoloCount(ds);
+  if (c < 2) { setDoloCount(ds, c+1); renderDolo(ds); }
+}
+function undoDolo(ds) {
+  const c = getDoloCount(ds);
+  if (c > 0) { setDoloCount(ds, c-1); renderDolo(ds); }
+}
+
+// ═══════════════════════════════════════════════════════════
+// SCHEDULE VIEW
+// ═══════════════════════════════════════════════════════════
+function renderSchedule() {
+  const off = dayOffset(new Date());
+  let html = `<div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+    Surgery: May 15, 2026 · ${PATIENT} · Both eyes</div>`;
+
+  MEDS.forEach(med => {
+    const typeLabel = med.type==='drops' ? '💧 Drops' : '💊 Tablet';
+    html += `<div class="sched-card">
+      <div class="sched-hdr" style="background:${med.bg}">
+        <div class="dot" style="background:${med.color}"></div>
+        <h3>${med.name}</h3>
+        <span class="badge" style="background:${med.color}22;color:${med.color}">${typeLabel}</span>
+      </div>`;
+
+    if (med.id === 'ascon') {
+      html += `<div class="sched-row ${off>=0&&off<=30?'active-week':''}">
+        <span class="sched-row-lbl">May 15 – Jun 14</span>
+        <span class="sched-row-times">Hourly · 12×/day<br>
+          <span style="font-size:10px;color:var(--muted)">7 AM → 6 PM</span></span>
+      </div>`;
+    } else if (med.id === 'omega3') {
+      html += `<div class="sched-row ${off>=0&&off<=30?'active-week':''}">
+        <span class="sched-row-lbl">May 15 – Jun 14</span>
+        <span class="sched-row-times">2:00 PM · after lunch</span>
+      </div>`;
+    } else {
+      med.schedule.forEach(slot => {
+        const sd = new Date(SURGERY_DATE); sd.setDate(sd.getDate() + slot.ds);
+        const ed = new Date(SURGERY_DATE); ed.setDate(ed.getDate() + slot.de);
+        const wk = Math.ceil(slot.ds / 7);
+        const lbl = `Wk ${wk} · ${sd.toLocaleDateString('en-IN',{month:'short',day:'numeric'})}–${ed.toLocaleDateString('en-IN',{month:'short',day:'numeric'})}`;
+        const times = slot.times.map(fmt12).join(' · ');
+        const active = off >= slot.ds && off <= slot.de;
+        html += `<div class="sched-row ${active?'active-week':''}">
+          <span class="sched-row-lbl">${lbl}</span>
+          <span class="sched-row-times">${times}</span>
         </div>`;
-    for (const r of item.rows) {
-      html += `
-        <div class="sched-row">
-          <div class="sched-period">${r.p}</div>
-          <div class="sched-times ${r.stop ? 'sched-stop' : ''}">${r.t}</div>
-        </div>`;
+      });
     }
     html += `</div>`;
-  }
+  });
 
-  html += `
-    <div class="sched-card" style="border-left-color:#f57c00">
-      <div class="sched-hdr" style="background:#fff8f0">
-        <span class="sched-mname" style="color:#e65100">Dolo 650 / Ultracet</span>
-        <span class="sched-mtype" style="color:#e65100">Tablet · As Needed</span>
-      </div>
-      <div class="sched-row">
-        <div class="sched-period">As needed</div>
-        <div class="sched-times">1 tablet · up to 2×/day · only if pain</div>
-      </div>
+  // Dolo
+  html += `<div class="sched-card">
+    <div class="sched-hdr" style="background:#fffbeb">
+      <div class="dot" style="background:#f59e0b"></div>
+      <h3>Dolo 650 / Ultracet</h3>
+      <span class="badge" style="background:#fde68a;color:#92400e">💊 As Needed</span>
+    </div>
+    <div class="sched-row">
+      <span class="sched-row-lbl">Only if pain</span>
+      <span class="sched-row-times">Max 2× per day</span>
     </div>
   </div>`;
 
-  return html;
+  document.getElementById('scheduleContent').innerHTML = html;
 }
 
-// --- HISTORY ---
+// ═══════════════════════════════════════════════════════════
+// HISTORY VIEW
+// ═══════════════════════════════════════════════════════════
 function renderHistory() {
-  const today = parseD(todayStr());
-  const start = new Date(parseD(SURGERY).getTime() + 86400000);
-  const days  = [];
-  for (let i = 13; i >= 0; i--) {
-    const d = new Date(today); d.setDate(d.getDate() - i);
-    if (d >= start) days.push(strD(d));
-  }
+  const today = new Date();
+  const todayOff = dayOffset(today);
+  let html = '';
 
-  let html = `<div class="hist-list">`;
-
-  if (!days.length) {
-    return html + `<div class="empty"><div class="ei">📊</div>No history yet.</div></div>`;
-  }
-
-  // Overall stat
-  let tot = 0, tk = 0;
-  for (const ds of days) {
-    const d = dosesFor(ds);
-    tot += d.length;
-    tk  += d.filter(x => getStatus(x.id) === 'taken').length;
-  }
-
-  if (tot > 0) {
-    const pct = Math.round(tk/tot*100);
-    html += `
-      <div class="stat-card">
-        <div>
-          <div class="stat-lbl">Adherence (14 days)</div>
-          <div class="stat-val">${pct}%</div>
-        </div>
-        <div class="stat-detail">${tk} taken<br>${tot-tk} missed / pending</div>
-      </div>`;
-  }
-
-  const ts = todayStr();
-  for (const ds of days) {
-    const doses = dosesFor(ds);
+  for (let i = todayOff; i >= Math.max(0, todayOff - 13); i--) {
+    const d = new Date(SURGERY_DATE);
+    d.setDate(d.getDate() + i);
+    const ds = dateStr(d);
+    const doses = getDoses(d);
     if (!doses.length) continue;
 
-    const taken   = doses.filter(d => getStatus(d.id) === 'taken').length;
-    const skipped = doses.filter(d => getStatus(d.id) === 'skipped').length;
-    const pending = doses.length - taken - skipped;
-    const pct     = Math.round(taken / doses.length * 100);
-    const isT     = ds === ts;
+    const taken   = doses.filter(x => getStatus(ds,x.medId,x.time)==='taken').length;
+    const skipped = doses.filter(x => getStatus(ds,x.medId,x.time)==='skipped').length;
+    const logged  = taken + skipped;
+    const total   = doses.length;
+    const pct     = logged ? Math.round(taken/logged*100) : null;
 
-    html += `
-      <div class="hist-card" onclick="gotoDate('${ds}')">
-        <div class="hist-top">
-          <div class="hist-date">
-            ${fmtDate(ds)}
-            ${isT ? '<span class="badge-today">Today</span>' : ''}
-          </div>
-          <div class="hist-pct">${pct}%</div>
+    let adh, adhCls;
+    if (pct === null)     { adh='—';       adhCls='adh-na'; }
+    else if (pct >= 80)  { adh=`${pct}%`; adhCls='adh-hi'; }
+    else if (pct >= 50)  { adh=`${pct}%`; adhCls='adh-mid'; }
+    else                 { adh=`${pct}%`; adhCls='adh-lo'; }
+
+    const label = i===todayOff ? 'Today' : `Day ${i} · ${d.toLocaleDateString('en-IN',{weekday:'short',month:'short',day:'numeric'})}`;
+    const doloC = getDoloCount(ds);
+
+    html += `<div class="hist-day">
+      <div class="hist-hdr" onclick="toggleHist('h${i}')">
+        <h3>${label}</h3>
+        <div class="hist-meta">
+          <span class="hist-count">${taken}/${total}</span>
+          <span class="adh-pill ${adhCls}">${adh}</span>
+          <span style="color:var(--muted)">›</span>
         </div>
-        <div class="hist-bar-wrap">
-          <div class="hb-taken"  style="width:${taken/doses.length*100}%"></div>
-          <div class="hb-skip"   style="width:${skipped/doses.length*100}%"></div>
-          <div style="flex:1"></div>
-        </div>
-        <div class="hist-stats">
-          <span class="hs t">✓ ${taken}</span>
-          ${skipped ? `<span class="hs s">✗ ${skipped}</span>` : ''}
-          ${pending  ? `<span class="hs">${pending} pending</span>` : ''}
-          <span class="hs ml">${doses.length} total · tap to log</span>
-        </div>
+      </div>
+      <div class="hist-body" id="h${i}">`;
+
+    // Group by med
+    const byMed = {};
+    doses.forEach(d2 => { (byMed[d2.medId] = byMed[d2.medId]||[]).push(d2); });
+    Object.values(byMed).forEach(mDoses => {
+      const med = mDoses[0].med;
+      html += `<div class="hist-med-lbl" style="color:${med.color}">${med.short}</div>`;
+      mDoses.forEach(d2 => {
+        const st = getStatus(ds, d2.medId, d2.time);
+        const chip = st==='taken'   ? `<span class="chip chip-t">✓</span>`
+                   : st==='skipped' ? `<span class="chip chip-s">✗</span>`
+                   : `<span style="font-size:11px;color:var(--muted)">—</span>`;
+        html += `<div class="hist-dose-row"><span>${fmt12(d2.time)}</span>${chip}</div>`;
+      });
+    });
+
+    if (doloC > 0) {
+      html += `<div style="margin-top:8px;font-size:12px;color:#a16207">💊 Dolo: ${doloC}× taken</div>`;
+    }
+
+    html += `</div></div>`;
+  }
+
+  if (!html) {
+    html = `<div class="empty"><div class="ico">📋</div><p>No history yet.<br>Start tracking today!</p></div>`;
+  }
+  document.getElementById('historyContent').innerHTML = html;
+}
+
+function toggleHist(id) {
+  const el = document.getElementById(id);
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+
+// ═══════════════════════════════════════════════════════════
+// NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════
+function renderNotifArea() {
+  const area = document.getElementById('notifArea');
+  if (!('Notification' in window)) {
+    area.innerHTML = `<div class="warn-card">⚠️ Notifications not supported in this browser.</div>`;
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    area.innerHTML = `<div class="warn-card">🔕 Notifications blocked. Enable in Settings to get alarms.
+      <button onclick="this.closest('.warn-card').remove()">×</button></div>`;
+  } else if (Notification.permission === 'default') {
+    area.innerHTML = `<div class="perm-card">
+      <h3>🔔 Enable dose alarms</h3>
+      <p>Get notified 5 min before each dose and right at dose time.</p>
+      <button class="btn-perm" onclick="requestNotif()">Enable notifications</button>
+    </div>`;
+  } else {
+    // Granted – show install hint if not standalone
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    if (!isStandalone) {
+      area.innerHTML = `<div class="install-hint">
+        📲 <strong>Install for reliable alarms:</strong><br>
+        iOS: Share → Add to Home Screen<br>
+        Android: Menu → Add to Home Screen
       </div>`;
+    } else {
+      area.innerHTML = '';
+    }
+    scheduleNotifications();
   }
-
-  html += `</div>`;
-  return html;
 }
 
-// ===================== ACTIONS =====================
-function mark(id, status) {
-  setStatus(id, status);
-  if (status === 'taken') cancelNotif(id);
-  render();
-  scheduleTodayNotifs();
+async function requestNotif() {
+  const perm = await Notification.requestPermission();
+  renderNotifArea();
+  if (perm === 'granted') scheduleNotifications();
 }
 
-function chgDate(delta) {
-  const d = parseD(curDate); d.setDate(d.getDate() + delta);
-  const min = new Date(parseD(SURGERY).getTime() + 86400000);
-  const max = parseD(todayStr());
-  if (d < min || d > max) return;
-  curDate = strD(d);
-  render();
+const timers = [];
+
+function scheduleNotifications() {
+  if (Notification.permission !== 'granted') return;
+  timers.forEach(clearTimeout);
+  timers.length = 0;
+
+  const today = new Date();
+  const ds    = dateStr(today);
+  const now   = new Date();
+  const doses = getDoses(today);
+
+  doses.forEach(dose => {
+    if (getStatus(ds, dose.medId, dose.time)) return;
+    const [h, m] = dose.time.split(':').map(Number);
+    const doseTime = new Date(); doseTime.setHours(h, m, 0, 0);
+    const ms = doseTime - now;
+    if (ms <= 0 || ms > 86400000) return;
+
+    const send = (isWarning) => {
+      const msg = { type:'SHOW_NOTIFICATION',
+        medName: dose.med.short,
+        timeStr: fmt12(dose.time),
+        tag: `${dose.medId}_${dose.time}${isWarning?'_w':''}`,
+        isWarning };
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage(msg);
+      } else {
+        new Notification(isWarning ? `⏰ ${dose.med.short} in 5 min` : `💧 ${dose.med.short}`,{
+          body: isWarning ? `Upcoming: ${fmt12(dose.time)}` : `${fmt12(dose.time)} · Both eyes`,
+          icon:'icon-192.png', tag: msg.tag, requireInteraction: !isWarning
+        });
+      }
+    };
+
+    // Notify 5 min before dose (only one notification per dose)
+    const fireMs = ms > 5*60*1000 ? ms - 5*60*1000 : ms;
+    timers.push(setTimeout(() => send(false), fireMs));
+  });
 }
 
-function gotoDate(ds) {
-  curDate = ds; tab = 'today'; render();
+// ═══════════════════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════════════════
+function switchTab(tab) {
+  ['today','schedule','history'].forEach(t => {
+    document.getElementById(`view-${t}`).classList.toggle('active', t===tab);
+    document.getElementById(`tab-${t}`).classList.toggle('active', t===tab);
+  });
+  if (tab==='today')    renderToday();
+  if (tab==='schedule') renderSchedule();
+  if (tab==='history')  renderHistory();
 }
 
-function switchTab(t) {
-  tab = t;
-  if (t === 'today') curDate = todayStr();
-  render();
+// ═══════════════════════════════════════════════════════════
+// SERVICE WORKER
+// ═══════════════════════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js')
+    .then(() => console.log('SW registered'))
+    .catch(e => console.warn('SW error', e));
 }
 
-// ===================== NOTIFICATIONS =====================
-async function handleNotifBtn() {
-  if (typeof Notification === 'undefined') return alert('Notifications not supported.');
-  if (Notification.permission === 'denied') return alert('Notifications blocked. Please enable in phone Settings → Browser.');
-  const p = await Notification.requestPermission();
-  if (p === 'granted') { await initSW(); scheduleTodayNotifs(); }
-  render();
-}
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+renderToday();
+renderSchedule(); // pre-render for instant tab switch
 
-async function initSW() {
-  if (!('serviceWorker' in navigator) || swReady) return;
-  try {
-    await navigator.serviceWorker.register('./sw.js');
-    await navigator.serviceWorker.ready;
-    swReady = true;
-    navigator.serviceWorker.addEventListener('message', onSWMsg);
-  } catch(e) { console.warn('SW failed', e); }
-}
-
-function onSWMsg(e) {
-  const { type, id, status } = e.data || {};
-  if (type === 'MARK') { setStatus(id, status); render(); scheduleTodayNotifs(); }
-  if (type === 'OPEN') { tab = 'today'; curDate = todayStr(); render(); }
-}
-
-async function scheduleTodayNotifs() {
-  if (!swReady || Notification?.permission !== 'granted') return;
-  const sw  = await navigator.serviceWorker.ready;
-  const now = Date.now();
-  const pending = dosesFor(todayStr())
-    .filter(d => !getStatus(d.id) && d.ts > now - (5 * 60 * 1000))
-    .map(d => ({ id: d.id, name: d.medName, type: d.type, time: d.time, ts: d.ts }));
-  sw.active?.postMessage({ type: 'SCHEDULE', doses: pending, now });
-}
-
-async function cancelNotif(id) {
-  if (!swReady) return;
-  const sw = await navigator.serviceWorker.ready;
-  sw.active?.postMessage({ type: 'CANCEL', id });
-}
-
-// ===================== INIT =====================
-async function init() {
-  hydrate();
-  render();
-
-  if (Notification?.permission === 'granted') {
-    await initSW();
-    scheduleTodayNotifs();
-  }
-
-  // Midnight refresh
-  const midnight = () => {
-    const n = new Date();
-    const ms = new Date(n.getFullYear(), n.getMonth(), n.getDate()+1) - n;
-    setTimeout(() => { curDate = todayStr(); render(); scheduleTodayNotifs(); midnight(); }, ms);
-  };
-  midnight();
-}
-
-init();
+// Refresh today view every minute (next-dose highlight, progress)
+setInterval(() => {
+  if (document.getElementById('view-today').classList.contains('active')) renderToday();
+}, 60000);
 </script>
 </body>
 </html>
