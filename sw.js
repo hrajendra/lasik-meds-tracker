@@ -1,4 +1,4 @@
-const CACHE = 'lasik-v2'; // bumped — forces SW update on all clients
+const CACHE = 'lasik-v3';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-96.png'];
 
 // ── Install ───────────────────────────────────────────────────────────
@@ -9,10 +9,11 @@ self.addEventListener('install', e => {
 
 // ── Activate ──────────────────────────────────────────────────────────
 self.addEventListener('activate', e => {
+  // Clean old caches — no clients.claim() to avoid mid-session page re-renders
   e.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
-      .then(() => self.clients.claim()) // claim all open tabs
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    )
   );
 });
 
